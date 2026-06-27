@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم — PickIt Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#FF3CAC;--purple:#784BA0;--blue:#2B86C5;--yellow:#FFD93D;--orange:#FF6B35;--green:#06D6A0;--dark:#0F0F1A;--card-bg:#1A1A2E;--text:#F0F0F0;--muted:#888;--radius:14px;--grad:linear-gradient(135deg,var(--pink),var(--purple),var(--blue))}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--dark);color:var(--text);font-family:'Cairo',sans-serif;min-height:100vh;display:flex}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:#12122a;border-left:1px solid rgba(255,255,255,.07);padding:24px 0;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;right:0;z-index:50}
+.sb-logo{padding:0 20px 28px;font-size:1.4rem;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sb-section{padding:0 12px 8px;font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1.5px}
+.sb-link{display:flex;align-items:center;gap:11px;padding:11px 20px;color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:600;border-radius:10px;margin:2px 10px;transition:all .2s;cursor:pointer;border:none;background:none;font-family:inherit;width:calc(100% - 20px);text-align:right}
+.sb-link:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.sb-link.active{background:rgba(255,60,172,.12);color:var(--pink)}
+.sb-link .icon{font-size:1rem;width:22px;text-align:center}
+.sb-bottom{margin-top:auto;padding:0 12px}
+
+/* MAIN */
+.main{margin-right:240px;flex:1;padding:28px 32px;min-height:100vh}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.page-title{font-size:1.4rem;font-weight:900}
+.page-title span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--card-bg);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 var(--radius) 0 60px;background:var(--grad);opacity:.1}
+.stat-icon{font-size:1.6rem;margin-bottom:8px}
+.stat-num{font-size:1.8rem;font-weight:900;line-height:1}
+.stat-label{font-size:.75rem;color:var(--muted);margin-top:4px}
+
+/* SECTIONS */
+.section{background:var(--card-bg);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);margin-bottom:24px;display:none}
+.section.active{display:block}
+.section-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.06)}
+.section-head h3{font-size:1rem;font-weight:800}
+.btn-primary{background:var(--grad);border:none;color:white;padding:9px 20px;border-radius:100px;cursor:pointer;font-family:inherit;font-weight:700;font-size:.85rem;transition:opacity .2s}
+.btn-primary:hover{opacity:.88}
+.btn-danger{background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.25);color:#ff6b6b;padding:7px 16px;border-radius:100px;cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:600;transition:all .2s}
+.btn-danger:hover{background:rgba(255,107,107,.25)}
+.btn-edit{background:rgba(43,134,197,.15);border:1px solid rgba(43,134,197,.25);color:var(--blue);padding:7px 16px;border-radius:100px;cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:600;transition:all .2s}
+.btn-edit:hover{background:rgba(43,134,197,.25)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:right;padding:12px 16px;color:var(--muted);font-weight:600;font-size:.78rem;border-bottom:1px solid rgba(255,255,255,.06);white-space:nowrap}
+td{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.prod-emoji{font-size:1.4rem;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:#111;border-radius:10px}
+.badge-pill{display:inline-block;padding:3px 10px;border-radius:100px;font-size:.7rem;font-weight:700}
+.badge-elec{background:rgba(43,134,197,.18);color:var(--blue)}
+.badge-fash{background:rgba(255,60,172,.18);color:var(--pink)}
+.badge-home{background:rgba(6,214,160,.18);color:var(--green)}
+.badge-beau{background:rgba(255,217,61,.18);color:var(--yellow)}
+.badge-spor{background:rgba(255,107,53,.18);color:var(--orange)}
+.actions{display:flex;gap:8px}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:22px}
+.form-full{grid-column:1/-1}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:.8rem;color:var(--muted);font-weight:600}
+.form-group input,.form-group select,.form-group textarea{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px 14px;color:var(--text);font-family:inherit;font-size:.9rem;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--pink)}
+.form-group input::placeholder,.form-group textarea::placeholder{color:var(--muted)}
+.form-group select option{background:#1a1a2e}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-actions{padding:0 22px 22px;display:flex;gap:12px}
+.msg{padding:10px 22px;font-size:.85rem}
+.msg.success{color:var(--green)}
+.msg.error{color:#ff6b6b}
+
+/* SPINNER */
+.spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--pink);border-radius:50%;animation:spin .7s linear infinite;margin:30px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* AUTH GATE */
+.auth-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:40px}
+.auth-gate .logo{font-size:2.5rem;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px}
+.auth-gate p{color:var(--muted);margin-bottom:24px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e1e3a;border:1px solid rgba(255,255,255,.12);color:var(--text);padding:12px 22px;border-radius:100px;font-size:.87rem;font-weight:600;z-index:999;transition:transform .3s;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-right:0;padding:16px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- AUTH GATE (shown when not logged in) -->
+<div class="auth-gate" id="authGate" style="display:none;width:100%">
+  <div class="logo">PickIt ✦</div>
+  <p>يجب تسجيل الدخول للوصول للوحة التحكم</p>
+  <a href="index.html" style="background:var(--grad);color:white;padding:12px 28px;border-radius:100px;text-decoration:none;font-weight:700">← العودة للمتجر</a>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">PickIt ✦</div>
+  <div class="sb-section">القائمة</div>
+  <button class="sb-link active" onclick="showSection('stats')" id="nav-stats"><span class="icon">📊</span>لوحة الإحصائيات</button>
+  <button class="sb-link" onclick="showSection('products')" id="nav-products"><span class="icon">📦</span>المنتجات</button>
+  <button class="sb-link" onclick="showSection('add')" id="nav-add"><span class="icon">➕</span>إضافة منتج</button>
+  <button class="sb-link" onclick="showSection('users')" id="nav-users"><span class="icon">👥</span>المستخدمون</button>
+  <div class="sb-bottom">
+    <div class="sb-section">الحساب</div>
+    <a href="index.html" class="sb-link"><span class="icon">🛍️</span>المتجر</a>
+    <button class="sb-link" id="logoutBtn" onclick="doLogout()"><span class="icon">🚪</span>تسجيل الخروج</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main" id="mainArea">
+  <div class="top-bar">
+    <div class="page-title">لوحة <span>التحكم</span></div>
+    <div id="adminName" style="font-size:.88rem;color:var(--muted)">جاري التحقق...</div>
+  </div>
+
+  <!-- STATS SECTION -->
+  <div class="section active" id="sec-stats">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-num" id="sProds">—</div><div class="stat-label">إجمالي المنتجات</div></div>
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-num" id="sUsers">—</div><div class="stat-label">المستخدمون المسجلون</div></div>
+      <div class="stat-card"><div class="stat-icon">🗂️</div><div class="stat-num">5</div><div class="stat-label">الفئات</div></div>
+      <div class="stat-card"><div class="stat-icon">🤖</div><div class="stat-num" id="sBotStatus" style="font-size:1rem;margin-top:4px">غير متصل</div><div class="stat-label">بوت تيليغرام</div></div>
+    </div>
+    <div class="section" style="display:block;background:rgba(255,60,172,.05);border-color:rgba(255,60,172,.15);padding:20px 22px">
+      <h3 style="font-size:.95rem;font-weight:700;margin-bottom:10px">🤖 إعداد بوت تيليغرام</h3>
+      <p style="color:var(--muted);font-size:.85rem;line-height:1.7">
+        لإدارة المتجر عبر تيليغرام:<br>
+        ١. ثبّت المكتبات: <code style="background:#111;padding:2px 8px;border-radius:6px">pip install -r requirements.txt</code><br>
+        ٢. ضع BOT_TOKEN في ملف <code style="background:#111;padding:2px 8px;border-radius:6px">bot.py</code><br>
+        ٣. شغّل البوت: <code style="background:#111;padding:2px 8px;border-radius:6px">python bot.py</code><br>
+        ٤. ابحث عن بوتك في تيليغرام وأرسل <code style="background:#111;padding:2px 8px;border-radius:6px">/start</code>
+      </p>
+    </div>
+  </div>
+
+  <!-- PRODUCTS SECTION -->
+  <div class="section" id="sec-products">
+    <div class="section-head">
+      <h3>📦 جميع المنتجات</h3>
+      <button class="btn-primary" onclick="showSection('add')">+ إضافة منتج</button>
+    </div>
+    <div id="prodTableWrap"><div class="spinner"></div></div>
+  </div>
+
+  <!-- ADD PRODUCT SECTION -->
+  <div class="section" id="sec-add">
+    <div class="section-head">
+      <h3 id="formTitle">➕ إضافة منتج جديد</h3>
+      <button class="btn-edit" onclick="resetForm()">↺ إعادة تعيين</button>
+    </div>
+    <div class="form-grid">
+      <input type="hidden" id="editId">
+      <div class="form-group"><label>اسم المنتج (عربي) *</label><input type="text" id="fName" placeholder="سماعات بلوتوث لاسلكية"></div>
+      <div class="form-group"><label>اسم المنتج (إنجليزي)</label><input type="text" id="fNameEn" placeholder="Wireless Headphones"></div>
+      <div class="form-group"><label>السعر الحالي *</label><input type="text" id="fPrice" placeholder="$18.99"></div>
+      <div class="form-group"><label>السعر القديم</label><input type="text" id="fOldPrice" placeholder="$34.99"></div>
+      <div class="form-group"><label>الفئة *</label>
+        <select id="fCat">
+          <option value="electronics">⚡ إلكترونيات</option>
+          <option value="fashion">👗 موضة</option>
+          <option value="home">🏠 منزل</option>
+          <option value="beauty">💄 جمال</option>
+          <option value="sports">⚽ رياضة</option>
+        </select>
+      </div>
+      <div class="form-group"><label>شارة</label><input type="text" id="fBadge" placeholder="🔥 الأكثر مبيعاً"></div>
+      <div class="form-group"><label>رمز تعبيري</label><input type="text" id="fEmoji" placeholder="🎧"></div>
+      <div class="form-group"><label>رابط المنتج (Temu) *</label><input type="url" id="fLink" placeholder="https://temu.com/..."></div>
+      <div class="form-group form-full"><label>روابط الصور (كل رابط في سطر)</label><textarea id="fImages" placeholder="https://example.com/img1.jpg&#10;https://example.com/img2.jpg"></textarea></div>
+      <div class="form-group form-full"><label>الوصف</label><textarea id="fDesc" placeholder="وصف المنتج التفصيلي..."></textarea></div>
+      <div class="form-group form-full"><label>المواصفات</label><textarea id="fSpecs" placeholder="• الوزن: 250g&#10;• اللون: متعدد"></textarea></div>
+      <div class="form-group form-full"><label>الألوان (اسم:كود مثال: أسود:#1a1a1a — كل لون في سطر)</label><textarea id="fColors" placeholder="أسود:#1a1a1a&#10;أبيض:#f0f0f0"></textarea></div>
+    </div>
+    <div class="msg" id="formMsg"></div>
+    <div class="form-actions">
+      <button class="btn-primary" onclick="saveProduct()">💾 حفظ المنتج</button>
+      <button class="btn-edit" onclick="showSection('products')">إلغاء</button>
+    </div>
+  </div>
+
+  <!-- USERS SECTION -->
+  <div class="section" id="sec-users">
+    <div class="section-head"><h3>👥 المستخدمون</h3></div>
+    <div id="usersWrap"><div class="spinner"></div></div>
+  </div>
+</main>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, getCountFromServer, query, orderBy }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA7AmiMe0L4-OcT7mFtwqZQaJd2K8vfcIw",
+  authDomain: "pickit-store-cf636.firebaseapp.com",
+  projectId: "pickit-store-cf636",
+  storageBucket: "pickit-store-cf636.firebasestorage.app",
+  messagingSenderId: "979338593286",
+  appId: "1:979338593286:web:84f705cd66c694ace6af87"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let products = [];
+
+const catLabels = {
+  electronics:'⚡ إلكترونيات', fashion:'👗 موضة',
+  home:'🏠 منزل', beauty:'💄 جمال', sports:'⚽ رياضة'
+};
+const catBadge = {electronics:'badge-elec',fashion:'badge-fash',home:'badge-home',beauty:'badge-beau',sports:'badge-spor'};
+
+// AUTH CHECK
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    document.getElementById('sidebar').style.display = 'none';
+    document.getElementById('mainArea').style.display = 'none';
+    document.getElementById('authGate').style.display = 'flex';
+    return;
+  }
+  document.getElementById('adminName').textContent = user.email;
+  loadStats();
+  loadProducts();
+  loadUsers();
+});
+
+// STATS
+async function loadStats() {
+  try {
+    const pc = await getCountFromServer(collection(db,'products'));
+    const uc = await getCountFromServer(collection(db,'users'));
+    document.getElementById('sProds').textContent = pc.data().count;
+    document.getElementById('sUsers').textContent = uc.data().count;
+  } catch(e) { console.log(e); }
+}
+
+// LOAD PRODUCTS
+async function loadProducts() {
+  try {
+    const q = query(collection(db,'products'), orderBy('createdAt','desc'));
+    const snap = await getDocs(q);
+    products = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderProductTable();
+  } catch(e) {
+    document.getElementById('prodTableWrap').innerHTML = `<p style="padding:20px;color:var(--muted)">تعذّر تحميل المنتجات. تحقق من قواعد Firebase.</p>`;
+  }
+}
+
+function renderProductTable() {
+  const wrap = document.getElementById('prodTableWrap');
+  if (products.length === 0) {
+    wrap.innerHTML = `<p style="padding:24px;color:var(--muted);text-align:center">لا توجد منتجات بعد. <button onclick="showSection('add')" style="color:var(--pink);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:700">أضف أول منتج ←</button></p>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>المنتج</th><th>الفئة</th><th>السعر</th><th>الشارة</th><th>الإجراءات</th>
+      </tr></thead>
+      <tbody>
+        ${products.map(p => `
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:12px">
+              <div class="prod-emoji">${p.emoji||'📦'}</div>
+              <div>
+                <div style="font-weight:700;font-size:.9rem">${p.name}</div>
+                <div style="font-size:.75rem;color:var(--muted)">${p.nameEn||''}</div>
+              </div>
+            </div></td>
+            <td><span class="badge-pill ${catBadge[p.cat]||''}">${catLabels[p.cat]||p.cat}</span></td>
+            <td><span style="color:var(--yellow);font-weight:700">${p.price||''}</span><br><span style="color:var(--muted);font-size:.75rem;text-decoration:line-through">${p.oldPrice||''}</span></td>
+            <td>${p.badge||'—'}</td>
+            <td><div class="actions">
+              <button class="btn-edit" onclick="editProduct('${p.id}')">تعديل</button>
+              <button class="btn-danger" onclick="deleteProduct('${p.id}')">حذف</button>
+            </div></td>
+          </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+// SAVE
+window.saveProduct = async function() {
+  const id = document.getElementById('editId').value;
+  const name = document.getElementById('fName').value.trim();
+  const price = document.getElementById('fPrice').value.trim();
+  const link = document.getElementById('fLink').value.trim();
+  if (!name || !price || !link) {
+    setMsg('⚠️ أكمل الحقول المطلوبة (الاسم، السعر، الرابط)', 'error'); return;
+  }
+  const cat = document.getElementById('fCat').value;
+  const oldPrice = document.getElementById('fOldPrice').value.trim();
+  const save = oldPrice && price
+    ? `وفّر ${Math.round((1 - parseFloat(price.replace(/[^0-9.]/g,'')) / parseFloat(oldPrice.replace(/[^0-9.]/g,''))) * 100)}%`
+    : '';
+  const imagesRaw = document.getElementById('fImages').value.trim();
+  const images = imagesRaw ? imagesRaw.split('\n').map(s => s.trim()).filter(Boolean) : [];
+  const colorsRaw = document.getElementById('fColors').value.trim();
+  const colors = colorsRaw ? colorsRaw.split('\n').filter(Boolean).map(line => {
+    const [name, hex] = line.split(':').map(s=>s.trim());
+    return {name: name||'', hex: hex||'#fff'};
+  }) : [];
+
+  const data = {
+    name, nameEn: document.getElementById('fNameEn').value.trim(),
+    price, oldPrice, save, cat, catLabel: catLabels[cat],
+    badge: document.getElementById('fBadge').value.trim(),
+    emoji: document.getElementById('fEmoji').value.trim(),
+    link, images, colors,
+    description: document.getElementById('fDesc').value.trim(),
+    specs: document.getElementById('fSpecs').value.trim(),
+  };
+
+  try {
+    if (id) {
+      await updateDoc(doc(db,'products',id), data);
+      showToast('✅ تم تحديث المنتج');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db,'products'), data);
+      showToast('✅ تم إضافة المنتج');
+    }
+    resetForm();
+    loadProducts();
+    loadStats();
+    showSection('products');
+  } catch(e) {
+    setMsg('❌ حدث خطأ: ' + e.message, 'error');
+  }
+};
+
+window.editProduct = function(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('editId').value = id;
+  document.getElementById('fName').value = p.name||'';
+  document.getElementById('fNameEn').value = p.nameEn||'';
+  document.getElementById('fPrice').value = p.price||'';
+  document.getElementById('fOldPrice').value = p.oldPrice||'';
+  document.getElementById('fCat').value = p.cat||'electronics';
+  document.getElementById('fBadge').value = p.badge||'';
+  document.getElementById('fEmoji').value = p.emoji||'';
+  document.getElementById('fLink').value = p.link||'';
+  document.getElementById('fImages').value = (p.images||[]).join('\n');
+  document.getElementById('fDesc').value = p.description||'';
+  document.getElementById('fSpecs').value = p.specs||'';
+  document.getElementById('fColors').value = (p.colors||[]).map(c=>`${c.name}:${c.hex}`).join('\n');
+  document.getElementById('formTitle').textContent = '✏️ تعديل منتج';
+  showSection('add');
+};
+
+window.deleteProduct = async function(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+  try {
+    await deleteDoc(doc(db,'products',id));
+    showToast('🗑️ تم حذف المنتج');
+    loadProducts();
+    loadStats();
+  } catch(e) { showToast('❌ فشل الحذف'); }
+};
+
+window.resetForm = function() {
+  ['editId','fName','fNameEn','fPrice','fOldPrice','fBadge','fEmoji','fLink','fImages','fDesc','fSpecs','fColors'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fCat').value = 'electronics';
+  document.getElementById('formTitle').textContent = '➕ إضافة منتج جديد';
+  setMsg('','');
+};
+
+// LOAD USERS
+async function loadUsers() {
+  try {
+    const snap = await getDocs(query(collection(db,'users'), orderBy('createdAt','desc')));
+    const users = snap.docs.map(d => ({id:d.id,...d.data()}));
+    const wrap = document.getElementById('usersWrap');
+    if (users.length === 0) { wrap.innerHTML = `<p style="padding:20px;color:var(--muted)">لا يوجد مستخدمون بعد</p>`; return; }
+    wrap.innerHTML = `
+      <div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>الاسم</th><th>البريد الإلكتروني</th><th>تاريخ التسجيل</th></tr></thead>
+        <tbody>${users.map((u,i) => `
+          <tr>
+            <td style="color:var(--muted)">${i+1}</td>
+            <td style="font-weight:700">${u.name||'—'}</td>
+            <td style="color:var(--muted)">${u.email||'—'}</td>
+            <td style="color:var(--muted);font-size:.8rem">${u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString('ar-SA') : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  } catch(e) {
+    document.getElementById('usersWrap').innerHTML = `<p style="padding:20px;color:var(--muted)">تعذّر تحميل المستخدمين</p>`;
+  }
+}
+
+window.showSection = function(name) {
+  ['stats','products','add','users'].forEach(s => {
+    document.getElementById('sec-'+s).classList.toggle('active', s===name);
+    document.getElementById('nav-'+s)?.classList.toggle('active', s===name);
+  });
+  if (name === 'products') loadProducts();
+  if (name === 'users') loadUsers();
+};
+
+window.doLogout = async function() {
+  await signOut(auth);
+  window.location.href = 'index.html';
+};
+
+function setMsg(text, type) {
+  const el = document.getElementById('formMsg');
+  el.textContent = text;
+  el.className = 'msg ' + type;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+window.showToast = showToast;
+</script>
+</body>
+</html>
