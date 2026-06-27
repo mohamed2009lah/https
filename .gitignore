@@ -1,0 +1,41 @@
+# الملفات السرية
+serviceAccount.json
+.env
+*.key
+*.pem
+
+# ملفات Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ملفات التحرير
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ملفات النشر
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# ملفات Railway
+railway.json
+
+# ملفات Firebase
+.firebase/
+*.log
+
+# ملفات IDE
+.vscode/
+.idea/
+*.iml
